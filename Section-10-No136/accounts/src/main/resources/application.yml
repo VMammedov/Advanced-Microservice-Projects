@@ -1,0 +1,98 @@
+server:
+  port: 8080
+
+  servlet:
+    context-path: "/api"
+
+spring:
+  application:
+    name: "accounts"
+  profiles:
+    active: "prod"
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/accountsdb
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: root
+
+  jpa:
+    show-sql: true
+
+  sql:
+    init:
+      mode: always
+
+  config:
+    import: "optional:configserver:http://localhost:8071/"
+
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    readiness-state:
+      enabled: true
+    liveness-state:
+      enabled: true
+  endpoint:
+    shutdown:
+      enabled: true
+    health:
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+
+eureka:
+  instance:
+    prefer-ip-address: true # Default eureka register services with hostname, but we don't have DNS server to convert it IP for that reason we set prefer IP address not hostname
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: http://localhost:8070/eureka/
+
+info:
+  app:
+    name: "accounts"
+    description: "Eazy Bank Accounts Application"
+    version: "1.0.0"
+
+resilience4j.circuitbreaker:
+  configs:
+    default: # default = all circuit breakers or you can put, specific circuit breaker name
+      slidingWindowSize: 10
+      permittedNumberOfCallsInHalfOpenState: 2
+      failureRateThreshold: 50
+      waitDurationInOpenState: 20000
+
+resilience4j:
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration:
+          seconds: 0.1
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        #ignore-exceptions: # retry will not happen in these exceptions but fallback will
+        #  - java.lang.NullPointerException
+        retry-exceptions: #retry will happen only for these exceptions
+          - java.lang.NullPointerException
+
+  ratelimiter:
+    configs:
+      default:
+        timeout-duration:
+          seconds: 1s
+        limit-refresh-period:
+          seconds: 5s
+        limit-for-period: 1

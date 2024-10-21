@@ -1,0 +1,65 @@
+server:
+  port: 8090
+
+  servlet:
+    context-path: "/api"
+
+spring:
+  application:
+    name: "loans"
+  profiles:
+    active: "prod"
+
+  datasource:
+    url: jdbc:mysql://localhost:3307/loansdb
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: root
+
+  jpa:
+    show-sql: true
+
+  sql:
+    init:
+      mode: always
+
+  config:
+    import: "optional:configserver:http://localhost:8071/"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    readiness-state:
+      enabled: true
+    liveness-state:
+      enabled: true
+  endpoint:
+    shutdown:
+      enabled: true
+    health:
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+eureka:
+  instance:
+    prefer-ip-address: true # Default eureka register services with hostname, but we don't have DNS server to convert it IP for that reason we set prefer IP address not hostname
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: http://localhost:8070/eureka/
+
+info:
+  app:
+    name: "loans"
+    description: "Eazy Bank Loans Application"
+    version: "1.0.0"
